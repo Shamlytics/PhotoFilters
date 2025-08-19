@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Film Photo Filters</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d, #6bcf7f);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #a8a8a8;
+            font-size: 1.1rem;
+        }
+
+        .upload-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .upload-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        .image-container {
+            position: relative;
+            margin: 30px 0;
+            border-radius: 20px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #previewImage {
+            max-width: 100%;
+            max-height: 70vh;
+            border-radius: 20px;
+            display: none;
+            transition: all 0.3s ease;
+        }
+
+        .placeholder {
+            color: #666;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .filters-section {
+            margin: 30px 0;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            padding: 20px 15px;
+            border-radius: 15px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .filter-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(45deg, #ff6b6b, #ffd93d);
+            border-color: #fff;
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .filter-btn .filter-name {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .filter-btn .filter-desc {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            line-height: 1.3;
+        }
+
+        .download-section {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .download-btn {
+            background: linear-gradient(45deg, #56ab2f, #a8e6cf);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: none;
+            position: relative;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(86, 171, 47, 0.4);
+        }
+
+        .download-btn:active {
+            transform: scale(0.98);
+        }
+
+        .ios-instructions {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #ccc;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Filter Effects */
+        .cinematic {
+            filter: contrast(1.2) saturate(0.9) brightness(1.1) sepia(0.1) hue-rotate(5deg);
+        }
+
+        .fujifilm {
+            filter: contrast(1.1) saturate(1.3) brightness(1.05) sepia(0.15) hue-rotate(-5deg);
+        }
+
+        .nostalgic {
+            filter: contrast(0.9) saturate(1.4) brightness(1.1) sepia(0.3) hue-rotate(15deg);
+        }
+
+        .teal-orange {
+            filter: contrast(1.15) saturate(1.5) brightness(1.08) hue-rotate(-10deg);
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .upload-section {
+                padding: 20px;
+            }
+            
+            .filters-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .filter-btn {
+                padding: 15px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📸 Film Filters</h1>
+            <p>Transform your photos with vintage film aesthetics</p>
+        </div>
+
+        <div class="upload-section">
+            <button class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                📱 Choose Photo
+            </button>
+            <button class="upload-btn" onclick="document.getElementById('cameraInput').click()">
+                📷 Take Photo
+            </button>
+            <input type="file" id="imageInput" accept="image/*">
+            <input type="file" id="cameraInput" accept="image/*" capture="camera">
+        </div>
+
+        <div class="image-container">
+            <img id="previewImage" alt="Preview">
+            <div class="placeholder" id="placeholder">
+                Upload a photo to get started
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing your image...</p>
+        </div>
+
+        <div class="filters-section">
+            <div class="filters-grid">
+                <button class="filter-btn" data-filter="none">
+                    <span class="filter-name">Original</span>
+                    <span class="filter-desc">No filter applied</span>
+                </button>
+                
+                <button class="filter-btn" data-filter="cinematic">
+                    <span class="filter-name">🎬 Cinematic</span>
+                    <span class="filter-desc">Movie-grade color grading</span>
+                </button>
+                
+                <button class="filter-btn" data-filter="fujifilm">
+                    <span class="filter-name">🎞️ Fujifilm</span>
+                    <span class="filter-desc">Classic film emulation</span>
+                </button>
+                
+                <button class="filter-btn" data-filter="nostalgic">
+                    <span class="filter-name">🌅 Nostalgic</span>
+                    <span class="filter-desc">Warm vintage memories</span>
+                </button>
+                
+                <button class="filter-btn" data-filter="teal-orange">
+                    <span class="filter-name">🎨 Teal & Orange</span>
+                    <span class="filter-desc">Street photography aesthetic</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="download-section">
+            <button class="download-btn" id="downloadBtn">
+                💾 Save Photo
+            </button>
+            <div class="ios-instructions" id="iosInstructions">
+                📱 <strong>iPhone users:</strong> After clicking save, long press the image and select "Save to Photos" or "Add to Photos" to save it as a new image to your camera roll.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentImage = null;
+        let currentFilter = 'none';
+
+        // File input handlers
+        document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+        document.getElementById('cameraInput').addEventListener('change', handleImageUpload);
+
+        // Filter button handlers
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => applyFilter(btn.dataset.filter));
+        });
+
+        // Download button handler
+        document.getElementById('downloadBtn').addEventListener('click', downloadImage);
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            showLoading();
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.getElementById('previewImage');
+                const placeholder = document.getElementById('placeholder');
+                
+                currentImage = new Image();
+                currentImage.onload = function() {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    document.getElementById('downloadBtn').style.display = 'inline-block';
+                    
+                    // Show iOS instructions for mobile users
+                    if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                        document.getElementById('iosInstructions').style.display = 'block';
+                    }
+                    
+                    hideLoading();
+                    
+                    // Reset to original filter
+                    applyFilter('none');
+                };
+                currentImage.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function applyFilter(filterName) {
+            const img = document.getElementById('previewImage');
+            if (!img.src) return;
+
+            // Remove all filter classes
+            img.className = '';
+            
+            // Remove active state from all buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Add active state to clicked button
+            document.querySelector(`[data-filter="${filterName}"]`).classList.add('active');
+
+            // Apply filter class
+            if (filterName !== 'none') {
+                img.classList.add(filterName);
+            }
+            
+            currentFilter = filterName;
+        }
+
+        function downloadImage() {
+            const img = document.getElementById('previewImage');
+            if (!img.src) return;
+
+            showLoading();
+
+            // Create canvas to apply filters and download
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = currentImage.naturalWidth;
+            canvas.height = currentImage.naturalHeight;
+
+            // Apply filter effects to canvas
+            applyCanvasFilter(ctx, currentFilter);
+            
+            ctx.drawImage(currentImage, 0, 0);
+            
+            // Try multiple download methods for better iPhone compatibility
+            try {
+                // Method 1: Try PNG format for better iPhone compatibility
+                canvas.toBlob(function(blob) {
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        
+                        // For mobile devices, especially iPhone
+                        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                            // Create a new window/tab with the image for saving
+                            const newWindow = window.open();
+                            const img = new Image();
+                            img.onload = function() {
+                                newWindow.document.write(`
+                                    <html>
+                                        <head><title>Save Your Filtered Photo</title></head>
+                                        <body style="margin:0; display:flex; justify-content:center; align-items:center; min-height:100vh; background:#000;">
+                                            <div style="text-align:center; color:white; font-family:Arial;">
+                                                <img src="${url}" style="max-width:100%; max-height:80vh; margin-bottom:20px;">
+                                                <p>Long press the image above and select "Save to Photos" or "Add to Photos"</p>
+                                            </div>
+                                        </body>
+                                    </html>
+                                `);
+                                hideLoading();
+                            };
+                            img.src = url;
+                        } else {
+                            // Desktop fallback
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = `film-filter-${currentFilter}-${Date.now()}.png`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            hideLoading();
+                        }
+                    }
+                }, 'image/png', 1.0);
+                
+            } catch (error) {
+                console.error('Download failed:', error);
+                // Fallback: Show image in new tab
+                const dataURL = canvas.toDataURL('image/png', 1.0);
+                const newWindow = window.open();
+                newWindow.document.write(`
+                    <html>
+                        <head><title>Your Filtered Photo</title></head>
+                        <body style="margin:0; display:flex; justify-content:center; align-items:center; min-height:100vh; background:#000;">
+                            <div style="text-align:center; color:white; font-family:Arial;">
+                                <img src="${dataURL}" style="max-width:100%; max-height:80vh; margin-bottom:20px;">
+                                <p>Long press the image and select "Save to Photos"</p>
+                            </div>
+                        </body>
+                    </html>
+                `);
+                hideLoading();
+            }
+        }
+
+        function applyCanvasFilter(ctx, filterName) {
+            switch(filterName) {
+                case 'cinematic':
+                    ctx.filter = 'contrast(120%) saturate(90%) brightness(110%) sepia(10%) hue-rotate(5deg)';
+                    break;
+                case 'fujifilm':
+                    ctx.filter = 'contrast(110%) saturate(130%) brightness(105%) sepia(15%) hue-rotate(-5deg)';
+                    break;
+                case 'nostalgic':
+                    ctx.filter = 'contrast(90%) saturate(140%) brightness(110%) sepia(30%) hue-rotate(15deg)';
+                    break;
+                case 'teal-orange':
+                    ctx.filter = 'contrast(115%) saturate(150%) brightness(108%) hue-rotate(-10deg)';
+                    break;
+                default:
+                    ctx.filter = 'none';
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        // Add some visual feedback for touch devices
+        document.querySelectorAll('.upload-btn, .filter-btn, .download-btn').forEach(btn => {
+            btn.addEventListener('touchstart', function() {
+                this.style.transform = 'scale(0.95)';
+            });
+            
+            btn.addEventListener('touchend', function() {
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 100);
+            });
+        });
+    </script>
+</body>
+</html>
